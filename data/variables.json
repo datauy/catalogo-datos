@@ -1,0 +1,36 @@
+[
+  {
+    "id": 25,
+    "idStr": "HumRelativa",
+    "nombre": "Humedad relativa",
+    "abrevVariab": "HR",
+    "unidad": "%",
+    "descripVariab": "Es la relación entre la tensión de vapor, expresada en %, y la máxima que puede existir a una temperatura dada. El aire esta saturado cuando la humedad relativa es del 100%. Mediciones en el período de una hora.",
+    "tipoIngreso": 2,
+    "nDecim": 0,
+    "nDigitosAlImprimir": 0,
+    "entera": false,
+    "periodicidad": 7,
+    "tamanioColumnaCodigo": 1,
+    "periodoDeRegistro": "Medida Instantanea",
+    "tipoDeMedicion": 1,
+    "grupoVista": "Variables Calculadas"
+  },
+  {
+    "id": 47,
+    "idStr": "TempAire",
+    "nombre": "Temperatura del Aire",
+    "abrevVariab": "TAI3",
+    "unidad": "ºC",
+    "descripVariab": "Temperatura señalada en un termómetro expuesto al aire,  al abrigo de la radiación solar directa. Mediciones en el período de una hora.",
+    "tipoIngreso": 2,
+    "nDecim": 1,
+    "nDigitosAlImprimir": 0,
+    "entera": false,
+    "periodicidad": 7,
+    "tamanioColumnaCodigo": 1,
+    "periodoDeRegistro": "Medida Instantanea",
+    "tipoDeMedicion": 1,
+    "grupoVista": "Temperaturas"
+  }
+]
