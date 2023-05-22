@@ -3,6 +3,8 @@ require 'net/http'
 require 'json'
 
 class Inumet
+  @token = ''
+  #
   def initialize(user, pass)
     @token = self.login(user, pass)
     rise "Usuario o password inválidos" if @token.nil?

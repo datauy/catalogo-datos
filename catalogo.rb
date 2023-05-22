@@ -5,7 +5,8 @@ require 'json'
 
 class Catalogo
   URL = 'https://test.catalogodatos.gub.uy'
-
+  @apiKey = ''
+  #
   def initialize(api_key)
     @apiKey = api_key
   end
@@ -28,10 +29,10 @@ class Catalogo
       type: "dataset",
       license_id: "odc-uy",
       notes: "Prueba crear dataset NOTAS CURL",
-      version": "2.0",
+      version: "2.0",
       tag_string: "Ancap, Transparencia Activa",
-      owner_org": "ancap",
-      update_frequency": "-1",
+      owner_org: "ancap",
+      update_frequency: "-1",
       groups: [{ name: "transparencia"}]
     }
     req.body = r_parameters.to_json
@@ -168,33 +169,18 @@ class Catalogo
   end
 
   # Actualizar recurso adjuntando archivo
-  def resource_update
+  def resource_update(id, format, file)
     uri = URI("#{URL}/api/3/action/resource_update")
     req = Net::HTTP::Post.new(uri)
     req['Authorization'] = @apiKey
 
     req.set_form(
       [
-        [
-          'format',
-          'CSV'
-        ],
-        [
-          'name',
-          'Recurso file actualizado vía API CURL'
-        ],
-        [
-          'description',
-          'Descripción de recurso country'
-        ],
-        [
-          'id',
-          File.open('ID_RESOURCE>')
-        ],
-        [
-          'upload',
-          File.open('countries.csv')
-        ]
+        [ 'format', format ],
+        [ 'name', "Recurso #{id} actualizado vía API CURL" ],
+        [ 'description', 'Descripción de recurso country' ],
+        [ 'id', id ],
+        [ 'upload', file ]
       ],
       'multipart/form-data'
     )
