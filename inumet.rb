@@ -7,11 +7,12 @@ class Inumet
   #
   def initialize(user, pass)
     @token = self.login(user, pass)
-    rise "Usuario o password inválidos" if @token.nil?
+    raise "Usuario o password inválidos" if @token.nil?
+    p "Inumet - User logged in"
   end
 
   #login
-  def login
+  def login(user, pass)
     uri = URI('https://api.inumet.gub.uy/sesiones/login')
     req = Net::HTTP::Post.new(uri)
     req.content_type = 'application/json'
@@ -63,6 +64,10 @@ class Inumet
     res = Net::HTTP.start(uri.hostname, uri.port, req_options) do |http|
       http.request(req)
     end
+    if res.is_a?(Net::HTTPSuccess)
+      return res.body
+    end
+    return
   end
 
   #Get variables
@@ -78,6 +83,10 @@ class Inumet
     res = Net::HTTP.start(uri.hostname, uri.port, req_options) do |http|
       http.request(req)
     end
+    if res.is_a?(Net::HTTPSuccess)
+      return res.body
+    end
+    return
   end
 
   #{ "mensaje": "No tiene permisos para acceder a '/alertas_incendios/'"}
@@ -89,6 +98,7 @@ class Inumet
       :idsEstaciones => estaciones,#['159', '39'],
       :idsVariables => variables,#['159', '39'],
     }
+    p params.inspect
     uri.query = URI.encode_www_form(params)
 
     req = Net::HTTP::Get.new(uri)
@@ -101,5 +111,9 @@ class Inumet
     res = Net::HTTP.start(uri.hostname, uri.port, req_options) do |http|
       http.request(req)
     end
+    if res.is_a?(Net::HTTPSuccess)
+      return res.body
+    end
+    return
   end
 end

@@ -1,4 +1,6 @@
 # process_inumet.rb
+require 'date'
+require 'csv'
 require_relative "./inumet.rb"
 require_relative "./catalogo.rb"
 
@@ -8,40 +10,87 @@ inumet = Inumet.new(ENV["INUMET_USER"], ENV["INUMET_PASSWD"])
 p "Inumet - Classes ready"
 ##### ESTACIONES ######
 estaciones_json = inumet.get_estaciones()
-estaciones_file = File.open('./data/inumet_estaciones.json', 'w')
-estaciones_in_file = estaciones_file.read()
+begin
+  estaciones_file = File.open('./data/inumet_estaciones.json', 'r')
+  estaciones_in_file = estaciones_file.read()
+  estaciones_file.close
+rescue
+  estaciones_in_file = ''
+end
 #update estaciones
-if estaciones_json != estaciones_in_file
+if estaciones_json.force_encoding('UTF-8') != estaciones_in_file  && !estaciones_json.nil?
   p "Inumet - Updating ESTACIONES"
   ## TODO: Make backup?
-  estaciones_file.write(estaciones)
+  File.write('./data/inumet_estaciones.json', estaciones_json)
+  File.write("./data/metadata-inumet_estaciones.csv", Time.now.strftime('%Y-%m-%d %H:%M'))
   ## TODO: RESOURCE_ID??
   #catalogo.resource_update('res_id', 'CSV', estaciones_file)
-  estaciones_file.close
 end
+p "Inumet - Processed ESTACIONES"
 ##### VARIABLES ######
 variables_json = inumet.get_variables()
-variables_file = File.open('./data/inumet_variables.json', 'w')
-variables_in_file = variables_file.read()
+begin
+  variables_file = File.open('./data/inumet_variables.json', 'r')
+  variables_in_file = variables_file.read()
+  variables_file.close
+rescue
+  variables_in_file = ''
+end
 #update variables
-if variables_json != variables_in_file
+if variables_json != variables_in_file && !variables_json.nil?
   p "Inumet - Updating VARIABLES"
   ## TODO: Make backup?
-  variables_file.write(variables)
+  File.write('./data/inumet_variables.json', variables_json)
+  File.write("./data/metadata-inumet_variables.csv", Time.now.strftime('%Y-%m-%d %H:%M'))
   ## TODO: RESOURCE_ID??
   #catalogo.resource_update('res_id', 'CSV', variables_file)
-  variables_file.close
 end
-
+p "Inumet - Processed VARIABLES"
 variables = JSON.parse(variables_json)
 estaciones = JSON.parse(estaciones_json)
-
 ###### DATOS ######
 estaciones_ids = estaciones.map{|e| e['id']}
-from = Date.yesterday.strftime('%Y%m%d 00:00')
-to = Date.strftime('%Y%m%d 00:00')
+from = Date.today.prev_day.strftime('%Y%m%d 00:00') #'20230101 00:00'#
+to = Date.today.strftime('%Y%m%d 00:00')
 variables.each do |v|
-  p "Inumet - Processing variable: #{v['nombre']}"
-  data = JSON.parse(get_datos(estaciones_ids, v['id'], from, to))
-  p data.inspect
+  vslug = v['nombre'].downcase.strip.gsub(' ', '-').gsub(/[^\w-]/, '')
+  CSV.open("data/inumet_#{vslug}.csv", "wb") do |csv|
+    p "Inumet - Processing variable: #{v['nombre']}"
+    api_data = inumet.get_datos(estaciones_ids, v['id'], from, to)
+    if ( api_data.nil? )
+      p "Inumet - API data is empty"
+      next
+    else
+      data = JSON.parse(api_data)
+      res = data["fechas"].map{ |j|
+        {
+        fecha: j,
+        datos: []
+        }
+      }
+      res_estaciones = data["estaciones"].map{|est| est["id"]}
+      ei = 0
+      data["observaciones"].first["datos"].each do |d|
+        i = 0
+        d.each do |dato|
+          res[i][:datos] << {
+            estacion_id: res_estaciones[ei],
+            dato: dato
+          }
+          #CSV
+          #csv << [res[i][:fecha], res_estaciones[ei], dato]
+          i += 1
+        end
+        ei += 1
+      end
+      res.each do |date_arr|
+        date_arr[:datos].each do |date_data|
+          csv << [date_arr[:fecha], date_data[:estacion_id], date_data[:dato]]
+        end
+      end
+      #Process metadata validation
+      File.write("./data/metadata-inumet_#{vslug}.csv", Time.now.strftime('%Y-%m-%d %H:%M'))
+    end
+    #p res.inspect
+  end
 end
