@@ -5,7 +5,7 @@ require_relative "./inumet.rb"
 require_relative "./catalogo.rb"
 
 p "Inumet - Staring synchronization"
-catalogo = Catalogo.new(ENV["CATALOGO_KEY"])
+#catalogo = Catalogo.new(ENV["CATALOGO_KEY"])
 inumet = Inumet.new(ENV["INUMET_USER"], ENV["INUMET_PASSWD"])
 p "Inumet - Classes ready"
 ##### ESTACIONES ######
@@ -50,11 +50,29 @@ variables = JSON.parse(variables_json)
 estaciones = JSON.parse(estaciones_json)
 ###### DATOS ######
 estaciones_ids = estaciones.map{|e| e['id']}
-from = Date.today.prev_day.strftime('%Y%m%d 00:00') #'20230101 00:00'#
-to = Date.today.strftime('%Y%m%d 00:00')
+#from_date = Date.today.prev_day
+to_date = Date.today.prev_day
+to = to_date.strftime('%Y%m%d 23:59')
+
 variables.each do |v|
   vslug = v['nombre'].downcase.strip.gsub(' ', '-').gsub(/[^\w-]/, '')
-  CSV.open("data/inumet_#{vslug}.csv", "wb") do |csv|
+  from_date = Date.parse(File.read("./data/metadata-inumet_#{vslug}.csv"))
+  from = from_date.strftime('%Y%m%d 00:00') #'20230101 00:00'#
+  # Create files if do not exists
+  if !File.exists?("data/inumet_#{vslug}.csv")
+    CSV.open("data/inumet_#{vslug}.csv", "wb") do |csv|
+      csv << ['fecha', 'estacion_id', v['idStr']]
+    end
+  end
+  # Create files if it is a new year
+  if from_date.month == 1 && from_date.mday == 1
+    #move previous files
+    File.rename("data/inumet_#{vslug}.csv", "data/inumet_#{vslug}-#{from_date.year}.csv")
+    CSV.open("data/inumet_#{vslug}.csv", "wb") do |csv|
+      csv << ['fecha', 'estacion_id', v['idStr']]
+    end
+  end
+  CSV.open("data/inumet_#{vslug}.csv", "a") do |csv|
     p "Inumet - Processing variable: #{v['nombre']}"
     api_data = inumet.get_datos(estaciones_ids, v['id'], from, to)
     if ( api_data.nil? )
