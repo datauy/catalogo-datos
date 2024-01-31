@@ -50,13 +50,16 @@ variables = JSON.parse(variables_json)
 estaciones = JSON.parse(estaciones_json)
 ###### DATOS ######
 estaciones_ids = estaciones.map{|e| e['id']}
-#from_date = Date.today.prev_day
 to_date = Date.today.prev_day
 to = to_date.strftime('%Y%m%d 23:59')
 
 variables.each do |v|
   vslug = v['nombre'].downcase.strip.gsub(' ', '-').gsub(/[^\w-]/, '')
-  from_date = Date.parse(File.read("./data/metadata-inumet_#{vslug}.csv"))
+  if !File.exists?("./data/metadata-inumet_#{vslug}.csv")
+    from_date = Date.today.prev_day
+  else
+    from_date = Date.parse(File.read("./data/metadata-inumet_#{vslug}.csv"))
+  end
   from = from_date.strftime('%Y%m%d 00:00') #'20230101 00:00'#
   # Create files if do not exists
   if !File.exists?("data/inumet_#{vslug}.csv")
