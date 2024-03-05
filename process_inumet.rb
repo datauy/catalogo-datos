@@ -64,7 +64,7 @@ variables.each do |v|
   # Create files if do not exists
   if !File.exist?("data/inumet_#{vslug}.csv")
     CSV.open("data/inumet_#{vslug}.csv", "wb") do |csv|
-      csv << ['fecha', 'estacion_id', v['idStr']]
+      csv << ['fecha', 'estacion_idStr', v['idStr']]
     end
   end
   # Create files if it is a new year
@@ -72,7 +72,7 @@ variables.each do |v|
     #move previous files
     File.rename("data/inumet_#{vslug}.csv", "data/inumet_#{vslug}-#{from_date.year}.csv")
     CSV.open("data/inumet_#{vslug}.csv", "wb") do |csv|
-      csv << ['fecha', 'estacion_id', v['idStr']]
+      csv << ['fecha', 'estacion_idStr', v['idStr']]
     end
   end
   CSV.open("data/inumet_#{vslug}.csv", "a") do |csv|
@@ -89,7 +89,7 @@ variables.each do |v|
         datos: []
         }
       }
-      res_estaciones = data["estaciones"].map{|est| est["id"]}
+      res_estaciones = data["estaciones"].map{|est| est["idStr"]}
       ei = 0
       data["observaciones"].first["datos"].each do |d|
         i = 0
